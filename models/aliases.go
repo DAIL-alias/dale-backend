@@ -1,9 +1,8 @@
-package alias
+package models
 
 import (
 	"time"
-	"gorm.io/driver/postgres"
-	"gorm.io/gorm"
+	
 )
 
 type Alias struct {
