@@ -9,6 +9,7 @@ import (
 
 func main() {
     config.LoadConfig() // Load .env
+    config.InitializeDB()
     r := gin.Default()
     routes.SetupRoutes(r)
     r.Run(":8000")
