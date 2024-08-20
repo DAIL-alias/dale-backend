@@ -51,11 +51,11 @@ func (h *UserHandler) GetUsers(c *gin.Context) {
 }
 
 // Retrieve user by ID
-func (h *UserHandler) GetUserByID(c *gin.Context) {
-	id := c.Param("id")  // Get ID parameter from request
+func (h *UserHandler) GetUserById(c *gin.Context) {
+	id_str := c.Param("id")  // Get ID parameter from request
 	
 	// Convert ID to integer
-	id, err := strconv.Atoi(id)
+	id, err := strconv.Atoi(id_str)
 	if err != nil {
 		c.JSON(400, gin.H{"error": "Invalid ID"})
 		return
