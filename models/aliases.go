@@ -2,10 +2,12 @@ package models
 
 import (
 	"time"
+	"gorm.io/gorm"
 	
 )
 
 type Alias struct {
+	gorm.Model
 	AliasID     int       `gorm:"primaryKey;autoIncrement;column: alias_id;unique;not null" json:"aliasId"`
 	UserID      int       `gorm:"column: user_id;unique;not null"                           json:"userId" `
 	AliasPrefix string    `gorm:"column: alias_prefix;unique;not null"                      json:"aliasPrefix"`
