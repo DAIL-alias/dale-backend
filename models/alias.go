@@ -16,7 +16,21 @@ type Alias struct {
 }
 
 func (a *Alias) BeforeCreate(tx *gorm.DB) (err error) {
-	alias := generateRandomString(7)
+	aliasExists := true
+	var alias string
+	for aliasExists {
+		alias = generateRandomString(7)
+
+		var aliasCheck Alias
+		err = tx.Where("alias_prefix = ?", alias).First(&aliasCheck).Error
+		if err != nil {
+			if err == gorm.ErrRecordNotFound {
+				aliasExists = false
+			} else {
+				return err
+			}
+		}
+	}
 
 	a.AliasPrefix = alias
 	a.CreatedAt = time.Now()
