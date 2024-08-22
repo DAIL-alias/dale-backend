@@ -1,31 +1,16 @@
 package handlers
 
 import (
-	"net/http"
-
-	"github.com/gin-gonic/gin"
+	"DALE/services"
 )
 
 
-func signUp (c *gin.Context) {
-	// Get the email
-	var body struct {
-		Email string
-		Password string
-		Username string
-	}
-
-	if c.Bind(&body) != nil {
-		c.JSON(http.StatusBadRequest, gin.H{
-			"error": "Could not read body",
-		})
-
-		return
-	}
-
-	c.JSON(http.StatusOK, gin.H{})
+type AuthHandler struct {
+	AuthService *services.AuthService
 }
 
-func login (c *gin.Context) {
-	c.JSON(http.StatusOK, gin.H{})
+func NewAuthHandler(authService *services.AuthService) *AuthHandler {
+	return &AuthHandler{AuthService: authService}
 }
+
+// Make endpoints for login, register, logout

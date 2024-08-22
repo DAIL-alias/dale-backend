@@ -1,12 +1,15 @@
 package services
 
-// TTL for user session
-const sessionTTL = 604800
-
 import (
 	"context"
+	"errors"
+
+	"github.com/google/uuid"
 	"github.com/redis/go-redis/v9"
 )
+
+// TTL for user session
+const sessionTTL = 604800
 
 type AuthService struct {
 	redisClient *redis.Client
@@ -14,19 +17,46 @@ type AuthService struct {
 
 func NewAuthService(redisClient *redis.Client) *AuthService {
 	return &AuthService{
-		redisClient: redisClient
+		redisClient: redisClient,
 	}
 }
 
 // Create user session (login)
-func (s *AuthService) CreateSession(ctx context.Context, userID string) error {
-	return s.redisClient.Set(ctx, userID, 1, sessionTTL).Err()
+func (s *AuthService) CreateSession(ctx context.Context, userID string) (string, error) {
+	sessionToken := uuid.NewString()
+
+	err := s.redisClient.Set(ctx, sessionToken, userID, sessionTTL).Err()
+	if err != nil {
+		return "", err
+	}
+
+	return sessionToken, nil
 }
 
 // Delete user session
 func (s *AuthService) DeleteSession(ctx context.Context, userID string) error {
-	return s.redisClient.Del(ctx, userID).Err()
+	err := s.redisClient.Del(ctx, userID).Err()
+
+	if err != nil {
+		return err
+	}
+
+	return nil
 }
 
 // Verify sid
-func (s *AuthService) VerifySession(ctx context.Context, 
+func (s *AuthService) VerifySession(ctx context.Context, sessionToken string) (string, error) {
+	// Get userID for session token
+	userID, err := s.redisClient.Get(ctx, sessionToken).Result()
+
+	if err == redis.Nil {
+		// Implies session token invalid
+		return "", errors.New("invalid token")
+	} else if err != nil {
+		// Unexpected
+		return "", err
+	}
+
+	// To be handled later
+	return userID, nil
+}
