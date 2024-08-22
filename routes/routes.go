@@ -33,4 +33,6 @@ func SetupRoutes(r *gin.Engine) {
 	r.GET("/aliases/:id", aliasHandler.GetAliasByID)
 	r.GET("/aliases/getusersaliases/:userID", aliasHandler.GetUsersAliases)
 	r.POST("/aliases/toggleactivestatus/:id", aliasHandler.ToggleActivateStatus)
+
+	
 }

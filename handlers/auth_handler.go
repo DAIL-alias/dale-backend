@@ -6,9 +6,6 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-type AuthHandler struct {
-	AuthService *ser
-}
 
 func signUp (c *gin.Context) {
 	// Get the email
@@ -26,5 +23,9 @@ func signUp (c *gin.Context) {
 		return
 	}
 
+	c.JSON(http.StatusOK, gin.H{})
+}
+
+func login (c *gin.Context) {
 	c.JSON(http.StatusOK, gin.H{})
 }
