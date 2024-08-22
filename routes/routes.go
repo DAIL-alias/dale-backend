@@ -20,6 +20,8 @@ func SetupRoutes(r *gin.Engine) {
 	aliasService := services.NewAliasService(aliasRepo)
 	aliasHandler := handlers.NewAliasHandler(aliasService)
 
+	// Create services, handlers for auth
+
 	r.GET("/ping", handlers.PingHandler)
 
 	//user routes
@@ -35,4 +37,5 @@ func SetupRoutes(r *gin.Engine) {
 	r.POST("/aliases/toggleactivestatus/:id", aliasHandler.ToggleActivateStatus)
 
 	//auth routes
+	r.POST("/auth/login")
 }
