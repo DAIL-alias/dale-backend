@@ -25,3 +25,7 @@ func (s *UserService) GetUsers() ([]models.User, error) {
 func (s *UserService) GetUserById(id int) (models.User, error) {
 	return s.UserRepository.GetUserById(id)
 }
+
+func (s *UserService) GetUserByEmailAndPassword(email, password string) (*models.User, error) {
+	return s.UserRepository.GetUserByEmailAndPassword(email, password)
+}

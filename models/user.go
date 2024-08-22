@@ -1,10 +1,7 @@
 package models
 
 import (
-	"crypto/rand"
-	"crypto/sha256"
-	"encoding/base64"
-	"io"
+	"DALE/utils"
 
 	"gorm.io/gorm"
 )
@@ -17,45 +14,18 @@ type User struct {
 	NumAliases int    `gorm:"column: num_aliases;not null;default:0"                       json:"numAliases"`
 }
 
-// `generateSalt(length int)` and `hashPassword(password, salt string)`
 
 // Hook to hash password and assign salt to the user
 func (u *User) BeforeCreate(tx *gorm.DB) (err error) {
-	salt, err := generateSalt(32)
+	salt, err := utils.GenerateSalt(32)
 
 	// Check if there's an error
 	if err != nil {
 		return err
 	}
 
-	u.Password = hashPassword(u.Password, salt)
+	u.Password = utils.HashPassword(u.Password, salt)
 	u.Salt = salt
 
 	return nil
-}
-
-// Generates a random salt of a length
-// May return an error, propgaga
-func generateSalt(length int) (string, error) {
-	// Allocate byte slice
-	salt := make([]byte, length)
-
-	// Read random bytes into slice
-	_, err := io.ReadFull(rand.Reader, salt)
-	if err != nil {
-		return "", err
-	}
-
-	// Encode salt to base64
-	return base64.StdEncoding.EncodeToString(salt), nil
-}
-
-// Hashes a password with a given salt
-func hashPassword(password, salt string) string {
-	// Generate and write into hash
-	hash := sha256.New()
-	hash.Write([]byte(password + salt))
-
-	// Convert to base64 encoding
-	return base64.StdEncoding.EncodeToString(hash.Sum(nil))
 }

@@ -1,6 +1,7 @@
 package services
 
 import (
+	"DALE/repositories"
 	"context"
 	"errors"
 
@@ -13,9 +14,10 @@ const sessionTTL = 604800
 
 type AuthService struct {
 	redisClient *redis.Client
+	UserRepository *repositories.UserRepository
 }
 
-func NewAuthService(redisClient *redis.Client) *AuthService {
+func NewAuthService(redisClient *redis.Client, userRepository *repositories.UserRepository) *AuthService {
 	return &AuthService{
 		redisClient: redisClient,
 	}
