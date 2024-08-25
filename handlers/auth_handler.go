@@ -55,7 +55,7 @@ func (h *AuthHandler) Login(c *gin.Context) {
 		services.SessionTTL,
 		"/",
 		"",
-		true,
+		false,
 		true,
 	)
 
@@ -87,26 +87,16 @@ func (h *AuthHandler) SignUp(c *gin.Context) {
 }
 
 func (h *AuthHandler) Logout(c *gin.Context) {
-	//bind the request JSON to the req struct to fetch session ID and token
-	var req struct {
-		UserID       string `json:"user_id" binding:"required"`
-		SessionToken string `json:"session_token" binding:"required"`
-	}
-
-	if err := c.ShouldBindJSON(&req); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid Credentials"})
-		return
-	}
-
-	//validate that the Redis session exists
-	_, err := h.AuthService.VerifySession(context.Background(), req.SessionToken)
-	if err != nil {
-		c.JSON(http.StatusUnauthorized, gin.H{"error": "Invalid session token"})
+	session, err := c.Cookie("sid")
+	if err != nil || session == "" {
+		// Invalid session, 401 and redirect
+		c.Redirect(http.StatusFound, "/signin")
+		c.Abort()
 		return
 	}
 
 	// delete the session if it exists
-	err = h.AuthService.DeleteSession(context.Background(), req.UserID)
+	err = h.AuthService.DeleteSession(context.Background(), session)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to delete session"})
 		return

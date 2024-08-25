@@ -10,7 +10,7 @@ import (
 )
 
 // TTL for user session
-const SessionTTL = 604800
+const SessionTTL = 0
 
 type AuthService struct {
 	redisClient    *redis.Client
@@ -36,8 +36,8 @@ func (s *AuthService) CreateSession(ctx context.Context, userID string) (string,
 }
 
 // Delete user session
-func (s *AuthService) DeleteSession(ctx context.Context, userID string) error {
-	err := s.redisClient.Del(ctx, userID).Err()
+func (s *AuthService) DeleteSession(ctx context.Context, sessionID string) error {
+	err := s.redisClient.Del(ctx, sessionID).Err()
 
 	if err != nil {
 		return err
@@ -60,5 +60,20 @@ func (s *AuthService) VerifySession(ctx context.Context, sessionToken string) (s
 	}
 
 	// To be handled later
+	return userID, nil
+}
+
+// Get userID associated with sessionToken if any
+func (s *AuthService) GetSession(ctx context.Context, sessionToken string) (string, error) {
+	userID, err := s.redisClient.Get(ctx, sessionToken).Result()
+
+	if err == redis.Nil {
+		// Implies no session exists
+		return "", nil
+	} else if err != nil {
+		// Unexpected
+		return "", err
+	}
+
 	return userID, nil
 }
