@@ -10,6 +10,7 @@ import (
 func main() {
     config.LoadConfig() // Load .env
     config.InitializeDB()
+    config.InitRedis()
     r := gin.Default()
     routes.SetupRoutes(r)
     r.Run(":8000")

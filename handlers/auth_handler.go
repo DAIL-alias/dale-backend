@@ -7,6 +7,8 @@ import (
 	"net/http"
 	"strconv"
 
+	"log"
+
 	"github.com/gin-gonic/gin"
 )
 
@@ -65,6 +67,8 @@ func (h *AuthHandler) Login(c *gin.Context) {
 func (h *AuthHandler) SignUp(c *gin.Context) {
 	// get and bind user struct
 	var newuser models.User
+
+	log.Println(newuser)
 
 	if err := c.ShouldBindJSON(&newuser); err != nil {
 		// Bad request

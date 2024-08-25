@@ -30,4 +30,6 @@ func InitRedis() {
 	if err := RedisClient.Ping(context.Background()).Err(); err != nil {
 		log.Fatalf("Could not connect to Redis: %v", err)
 	}
+
+	log.Println("Redis connected")
 }
