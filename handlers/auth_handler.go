@@ -2,7 +2,6 @@ package handlers
 
 import (
 	"DALE/models"
-	_ "DALE/models"
 	"DALE/services"
 	"context"
 	"net/http"
@@ -20,11 +19,8 @@ func NewAuthHandler(authService *services.AuthService, userService *services.Use
 	return &AuthHandler{AuthService: authService, UserService: userService}
 }
 
-// Make endpoints for login, register, logout
-// h is a reference to AuthHandler
-// c is the context for the request (i.e. if you need params)
 func (h *AuthHandler) Login(c *gin.Context) {
-	//bind request json to user struct
+	// bind request json to user struct
 	var loginReq struct {
 		Email    string `json:"email" binding:"required"`
 		Password string `json:"password" binding:"required"`
@@ -35,7 +31,7 @@ func (h *AuthHandler) Login(c *gin.Context) {
 		return
 	}
 
-	//validate user using getuserbyemailandpassword service
+	// validate user using getuserbyemailandpassword service
 	user, err := h.UserService.GetUserByEmailAndPassword(loginReq.Email, loginReq.Password)
 	if err != nil {
 		c.JSON(http.StatusUnauthorized, gin.H{"error": "Invalid Credentials"})
@@ -43,14 +39,27 @@ func (h *AuthHandler) Login(c *gin.Context) {
 	}
 	userid := strconv.Itoa(int(user.ID))
 
-	//create and return redis sesssion
+	// create and return redis sesssion
 	session, err := h.AuthService.CreateSession(context.Background(), userid)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
 	}
 
-	c.JSON(200, session)
+	// Set session ID as cookie for user
+	c.SetCookie(
+		"sid",
+		session,
+		services.SessionTTL,
+		"/",
+		"",
+		true,
+		true,
+	)
+
+	c.JSON(200, gin.H{
+		"message": "Login successful",
+	})
 }
 
 func (h *AuthHandler) SignUp(c *gin.Context) {
@@ -63,13 +72,13 @@ func (h *AuthHandler) SignUp(c *gin.Context) {
 		return
 	}
 
-	//call create user service and return any errors
+	// call create user service and return any errors
 	if err := h.UserService.CreateUser(&newuser); err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 	}
 
-	//return created user
-	c.JSON(200, newuser)
+	// return created user
+	c.JSON(200, gin.H{"message": "User created"})
 }
 
 func (h *AuthHandler) Logout(c *gin.Context) {
@@ -85,22 +94,24 @@ func (h *AuthHandler) Logout(c *gin.Context) {
 	}
 
 	//validate that the Redis session exists
-	session, err := h.AuthService.VerifySession(context.Background(), req.SessionToken)
+	_, err := h.AuthService.VerifySession(context.Background(), req.SessionToken)
 	if err != nil {
 		c.JSON(http.StatusUnauthorized, gin.H{"error": "Invalid session token"})
 		return
 	}
 
-	//delete the session if it exists
+	// delete the session if it exists
 	err = h.AuthService.DeleteSession(context.Background(), req.UserID)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to delete session"})
 		return
 	}
 
+	// Clear session cookie
+	c.SetCookie("sid", "", -1, "/", "", false, true)
+
 	//return success message with the deleted session information
 	c.JSON(http.StatusOK, gin.H{
-		"message":         "Session successfully deleted",
-		"deleted_session": session,
+		"message": "Session successfully deleted",
 	})
 }

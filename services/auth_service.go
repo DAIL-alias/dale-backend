@@ -10,10 +10,10 @@ import (
 )
 
 // TTL for user session
-const sessionTTL = 604800
+const SessionTTL = 604800
 
 type AuthService struct {
-	redisClient *redis.Client
+	redisClient    *redis.Client
 	UserRepository *repositories.UserRepository
 }
 
@@ -27,7 +27,7 @@ func NewAuthService(redisClient *redis.Client, userRepository *repositories.User
 func (s *AuthService) CreateSession(ctx context.Context, userID string) (string, error) {
 	sessionToken := uuid.NewString()
 
-	err := s.redisClient.Set(ctx, sessionToken, userID, sessionTTL).Err()
+	err := s.redisClient.Set(ctx, sessionToken, userID, SessionTTL).Err()
 	if err != nil {
 		return "", err
 	}
