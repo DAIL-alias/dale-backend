@@ -75,6 +75,7 @@ func (h *AuthHandler) SignUp(c *gin.Context) {
 	// call create user service and return any errors
 	if err := h.UserService.CreateUser(&newuser); err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
 	}
 
 	// return created user

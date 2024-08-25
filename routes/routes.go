@@ -36,11 +36,11 @@ func SetupRoutes(r *gin.Engine) {
 	aliasesGroup := r.Group("/aliases")
 	aliasesGroup.Use(middleware.AuthRequired())
 	{
-		aliasesGroup.POST("/createalias", aliasHandler.CreateAlias)
+		aliasesGroup.POST("/", aliasHandler.CreateAlias)
 		aliasesGroup.GET("", aliasHandler.GetAliases)
 		aliasesGroup.GET("/:id", aliasHandler.GetAliasByID)
-		aliasesGroup.GET("/getusersaliases/:userID", aliasHandler.GetUsersAliases)
-		aliasesGroup.POST("/toggleactivestatus/:id", aliasHandler.ToggleActivateStatus)
+		aliasesGroup.GET("/user/:userID", aliasHandler.GetUsersAliases)
+		aliasesGroup.POST("/toggle/:id", aliasHandler.ToggleActivateStatus)
 	}
 
 	// auth routes
