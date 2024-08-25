@@ -10,11 +10,13 @@ import (
 
 var RedisClient *redis.Client
 
-func init() {
+func InitRedis() {
 	addr := viper.GetString("REDIS_ADDR")
 	pwd := viper.GetString("REDIS_PWD")
 
 	if addr == "" || pwd == "" {
+		log.Printf("Redis address: %s", addr)
+		log.Printf("Redis password: %s", pwd)
 		log.Fatal("redis config error")
 	}
 
