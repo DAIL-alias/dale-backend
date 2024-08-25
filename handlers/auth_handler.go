@@ -72,7 +72,7 @@ func (h *AuthHandler) SignUp(c *gin.Context) {
 	c.JSON(200, newuser)
 }
 
-func (h *AuthHandler) LogoutUser(c *gin.Context) {
+func (h *AuthHandler) Logout(c *gin.Context) {
 	//bind the request JSON to the req struct to fetch session ID and token
 	var req struct {
 		UserID       string `json:"user_id" binding:"required"`

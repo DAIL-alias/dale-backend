@@ -10,32 +10,36 @@ import (
 )
 
 func SetupRoutes(r *gin.Engine) {
-	// Create repositories, services, handlers for users
+	// For users
 	userRepo := repositories.NewUserRepository(config.DB)
 	userService := services.NewUserService(userRepo)
 	userHandler := handlers.NewUserHandler(userService)
 
-	// Create repositories, services, handlers for aliases
+	// For aliases
 	aliasRepo := repositories.NewAliasRepository(config.DB)
 	aliasService := services.NewAliasService(aliasRepo)
 	aliasHandler := handlers.NewAliasHandler(aliasService)
 
-	// Create services, handlers for auth
+	// For auth
+	authService := services.NewAuthService(config.RedisClient, userRepo)
+	authHandler := handlers.NewAuthHandler(authService, userService)
 
 	r.GET("/ping", handlers.PingHandler)
 
-	//user routes
+	// user routes
 	r.POST("/users", userHandler.CreateUser)
 	r.GET("/users", userHandler.GetUsers)
 	r.GET("/users/:id", userHandler.GetUserById)
 
-	//alias routes
+	// alias routes
 	r.POST("/aliases/createalias", aliasHandler.CreateAlias)
 	r.GET("/aliases", aliasHandler.GetAliases)
 	r.GET("/aliases/:id", aliasHandler.GetAliasByID)
 	r.GET("/aliases/getusersaliases/:userID", aliasHandler.GetUsersAliases)
 	r.POST("/aliases/toggleactivestatus/:id", aliasHandler.ToggleActivateStatus)
 
-	//auth routes
-	r.POST("/auth/login")
+	// auth routes
+	r.POST("/auth/login", authHandler.Login)
+	r.POST("/auth/signup", authHandler.SignUp)
+	r.POST("/auth/logout", authHandler.Logout)
 }
