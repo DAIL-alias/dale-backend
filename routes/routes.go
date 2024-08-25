@@ -3,6 +3,7 @@ package routes
 import (
 	"DALE/config"
 	"DALE/handlers"
+	"DALE/middleware"
 	"DALE/repositories"
 	"DALE/services"
 
@@ -26,17 +27,21 @@ func SetupRoutes(r *gin.Engine) {
 
 	r.GET("/ping", handlers.PingHandler)
 
-	// user routes
+	// user routes (ADMIN)
 	r.POST("/users", userHandler.CreateUser)
 	r.GET("/users", userHandler.GetUsers)
 	r.GET("/users/:id", userHandler.GetUserById)
 
 	// alias routes
-	r.POST("/aliases/createalias", aliasHandler.CreateAlias)
-	r.GET("/aliases", aliasHandler.GetAliases)
-	r.GET("/aliases/:id", aliasHandler.GetAliasByID)
-	r.GET("/aliases/getusersaliases/:userID", aliasHandler.GetUsersAliases)
-	r.POST("/aliases/toggleactivestatus/:id", aliasHandler.ToggleActivateStatus)
+	aliasesGroup := r.Group("/aliases")
+	aliasesGroup.Use(middleware.AuthRequired())
+	{
+		aliasesGroup.POST("/createalias", aliasHandler.CreateAlias)
+		aliasesGroup.GET("", aliasHandler.GetAliases)
+		aliasesGroup.GET("/:id", aliasHandler.GetAliasByID)
+		aliasesGroup.GET("/getusersaliases/:userID", aliasHandler.GetUsersAliases)
+		aliasesGroup.POST("/toggleactivestatus/:id", aliasHandler.ToggleActivateStatus)
+	}
 
 	// auth routes
 	r.POST("/auth/login", authHandler.Login)
