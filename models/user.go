@@ -12,8 +12,8 @@ type User struct {
 	Password   string `gorm:"column:password;not null"                                     json:"password"  `
 	Salt       string `gorm:"column:salt;not null"                                                          `
 	NumAliases int    `gorm:"column: num_aliases;not null;default:0"                       json:"numAliases"`
+	Role       int    `gorm:"column:role;not null;default:0"                               json:"role"      `
 }
-
 
 // Hook to hash password and assign salt to the user
 func (u *User) BeforeCreate(tx *gorm.DB) (err error) {

@@ -27,20 +27,28 @@ func SetupRoutes(r *gin.Engine) {
 
 	r.GET("/ping", handlers.PingHandler)
 
-	// user routes (ADMIN)
-	r.POST("/users", userHandler.CreateUser)
-	r.GET("/users", userHandler.GetUsers)
-	r.GET("/users/:id", userHandler.GetUserById)
+	usersRoute := r.Group("/users")
+	usersRoute.Use(middleware.RoleRequired(2))
+	{
+		r.POST("", userHandler.CreateUser)
+		r.GET("", userHandler.GetUsers)
+		r.GET("/:id", userHandler.GetUserById)
+	}
 
 	// alias routes
 	aliasesGroup := r.Group("/aliases")
 	aliasesGroup.Use(middleware.AuthRequired())
 	{
 		aliasesGroup.POST("/", aliasHandler.CreateAlias)
-		aliasesGroup.GET("", aliasHandler.GetAliases)
-		aliasesGroup.GET("/:id", aliasHandler.GetAliasByID)
-		aliasesGroup.GET("/user/:userID", aliasHandler.GetUsersAliases)
 		aliasesGroup.POST("/toggle/:id", aliasHandler.ToggleActivateStatus)
+		// One for getting a user's aliases given their sessionID => userID
+		aliasesGroup.GET("/", aliasHandler.GetUsersAliasesProtected)
+
+		protectedAliasesGroup := aliasesGroup.Group("/admin")
+		protectedAliasesGroup.Use(middleware.RoleRequired(2))
+		protectedAliasesGroup.GET("", aliasHandler.GetAliases)
+		protectedAliasesGroup.GET("/:id", aliasHandler.GetAliasByID)
+		protectedAliasesGroup.GET("/user/:userID", aliasHandler.GetUsersAliases)
 	}
 
 	// auth routes
