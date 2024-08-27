@@ -32,3 +32,7 @@ func (s *AliasService) GetUsersAliases(userID int) ([]models.Alias, error) {
 func (s *AliasService) ToggleActiveStatus(id int) (models.Alias, error) {
 	return s.AliasRepository.ToggleActiveStatus(id)
 }
+
+func (s *AliasService) DeleteAlias(id int) error {
+	return s.AliasRepository.DeleteAlias(id)
+}

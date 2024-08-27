@@ -196,3 +196,51 @@ func (h *AliasHandler) ToggleActivateStatus(c *gin.Context) {
 
 	c.JSON(http.StatusOK, alias)
 }
+
+// Delete alias
+func (h *AliasHandler) DeleteAlias(c *gin.Context) {
+	aliasIDStr := c.Param("id")
+
+	aliasID, err := strconv.Atoi(aliasIDStr)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid ID"})
+		return
+	}
+	
+	sessionID, err := c.Cookie("sid")
+	if err != nil {
+		c.JSON(403, gin.H{"error": "Unauthorized"})
+		return
+	}
+
+	// Get userID from session
+	userID, err := utils.UserIDFromSID(sessionID, config.RedisClient)
+	if err == redis.Nil {
+		c.JSON(401, gin.H{"error": "Unauthorized"})
+		c.Abort()
+		return
+	} else if err != nil {
+		c.JSON(500, gin.H{"error": err.Error()})
+		c.Abort()
+		return
+	}
+
+	alias, err := h.AliasService.GetAliasByID(aliasID)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+
+	if alias.UserID != userID {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "Unauthorized"})
+		return
+	}
+
+	err = h.AliasService.DeleteAlias(aliasID)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{"message": "Alias deleted successfully"})
+}

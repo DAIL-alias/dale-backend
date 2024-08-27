@@ -41,8 +41,8 @@ func SetupRoutes(r *gin.Engine) {
 	{
 		aliasesGroup.POST("/", aliasHandler.CreateAlias)
 		aliasesGroup.POST("/toggle/:id", aliasHandler.ToggleActivateStatus)
-		// One for getting a user's aliases given their sessionID => userID
 		aliasesGroup.GET("/", aliasHandler.GetUsersAliasesProtected)
+		aliasesGroup.DELETE("/:id", aliasHandler.DeleteAlias)
 
 		protectedAliasesGroup := aliasesGroup.Group("/admin")
 		protectedAliasesGroup.Use(middleware.RoleRequired(2))
