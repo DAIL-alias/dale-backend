@@ -3,7 +3,6 @@ package middleware
 import (
 	"DALE/config"
 	"context"
-	"net/http"
 
 	"github.com/gin-gonic/gin"
 	"github.com/redis/go-redis/v9"
@@ -14,8 +13,7 @@ func AuthRequired() gin.HandlerFunc {
 		// Get session ID
 		session, err := c.Cookie("sid")
 		if err != nil || session == "" {
-			// Invalid session, 401 and redirect
-			c.Redirect(http.StatusFound, "/signin")
+			c.JSON(401, gin.H{"error": "Unauthorized"})
 			c.Abort()
 			return
 		}
@@ -24,7 +22,7 @@ func AuthRequired() gin.HandlerFunc {
 		userID, err := config.RedisClient.Get(context.Background(), session).Result()
 		if err == redis.Nil || userID == "" {
 			// Invalid session
-			c.Redirect(http.StatusFound, "/signin")
+			c.JSON(401, gin.H{"error": "Unauthorized"})
 			c.Abort()
 			return
 		} else if err != nil {

@@ -1,11 +1,12 @@
 package handlers
 
 import (
-	"net/http"
 	"DALE/models"
 	"DALE/services"
-	"github.com/gin-gonic/gin"
+	"net/http"
 	"strconv"
+
+	"github.com/gin-gonic/gin"
 )
 
 // UserHandler to handle requests for user stuff
