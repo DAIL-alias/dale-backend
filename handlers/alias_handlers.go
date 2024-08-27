@@ -5,7 +5,6 @@ import (
 	"DALE/models"
 	"DALE/services"
 	"DALE/utils"
-	"context"
 	"log"
 	"net/http"
 	"strconv"
@@ -35,7 +34,7 @@ func (h *AliasHandler) CreateAlias(c *gin.Context) {
 
 	// Is SID valid?
 	userID, err := utils.UserIDFromSID(session, config.RedisClient)
-	if err == redis.Nil || userID == "" {
+	if err == redis.Nil {
 		// Invalid session
 		c.JSON(401, gin.H{"error": "Unauthorized"})
 		c.Abort()
@@ -48,12 +47,7 @@ func (h *AliasHandler) CreateAlias(c *gin.Context) {
 
 	var alias models.Alias
 	// Create the alias model with UserID specified only
-	userIDint, err := strconv.Atoi(userID)
-	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid user ID"})
-		return
-	}
-	alias.UserID = userIDint
+	alias.UserID = userID
 
 	if err := h.AliasService.CreateAlias(&alias); err != nil {
 
@@ -126,10 +120,10 @@ func (h *AliasHandler) GetUsersAliasesProtected(c *gin.Context) {
 	}
 
 	// Get userID from session
-	userID, err := config.RedisClient.Get(context.Background(), sessionID).Result()
-	if err == redis.Nil || userID == "" {
+	userID, err := utils.UserIDFromSID(sessionID, config.RedisClient)
+	if err == redis.Nil {
 		// Invalid session
-		c.JSON(403, gin.H{"error": "Unauthorized"})
+		c.JSON(401, gin.H{"error": "Unauthorized"})
 		c.Abort()
 		return
 	} else if err != nil {
@@ -138,17 +132,7 @@ func (h *AliasHandler) GetUsersAliasesProtected(c *gin.Context) {
 		return
 	}
 
-	log.Printf("userID: %s", userID)
-
-	// To integer
-	userIDint, err := strconv.Atoi(userID)
-	if err != nil {
-		c.JSON(500, gin.H{"error": err.Error()})
-		c.Abort()
-		return
-	}
-
-	aliases, err := h.AliasService.AliasRepository.GetUsersAliases(userIDint)
+	aliases, err := h.AliasService.AliasRepository.GetUsersAliases(userID)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
@@ -159,15 +143,14 @@ func (h *AliasHandler) GetUsersAliasesProtected(c *gin.Context) {
 
 // define activation and deactivation of aliases
 func (h *AliasHandler) ToggleActivateStatus(c *gin.Context) {
-	idParam := c.Param("id")
-	id, err := strconv.Atoi(idParam)
+	aliasIDStr := c.Param("id")
+
+	aliasID, err := strconv.Atoi(aliasIDStr)
 	if err != nil {
-		c.JSON(500, gin.H{"error": err.Error()})
-		c.Abort()
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid ID"})
 		return
 	}
 	
-	// Get sessionID => userID
 	sessionID, err := c.Cookie("sid")
 	if err != nil {
 		c.JSON(403, gin.H{"error": "Unauthorized"})
@@ -175,10 +158,10 @@ func (h *AliasHandler) ToggleActivateStatus(c *gin.Context) {
 	}
 
 	// Get userID from session
-	userIDStr, err := config.RedisClient.Get(context.Background(), sessionID).Result()
-	if err == redis.Nil || userIDStr == "" {
+	userID, err := utils.UserIDFromSID(sessionID, config.RedisClient)
+	if err == redis.Nil {
 		// Invalid session
-		c.JSON(403, gin.H{"error": "Unauthorized"})
+		c.JSON(401, gin.H{"error": "Unauthorized"})
 		c.Abort()
 		return
 	} else if err != nil {
@@ -187,13 +170,8 @@ func (h *AliasHandler) ToggleActivateStatus(c *gin.Context) {
 		return
 	}
 
-	userID, err := strconv.Atoi(userIDStr)
-	if err != nil {
-		c.JSON(500, gin.H{"error": err.Error()})
-	}
-
 	//fetch alias by id
-	alias, err := h.AliasService.GetAliasByID(id)
+	alias, err := h.AliasService.GetAliasByID(aliasID)
 	if err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
@@ -206,7 +184,7 @@ func (h *AliasHandler) ToggleActivateStatus(c *gin.Context) {
 		return
 	}
 	
-	alias, err = h.AliasService.ToggleActiveStatus(id)
+	alias, err = h.AliasService.ToggleActiveStatus(aliasID)
 	if err != nil {
 		if err == gorm.ErrRecordNotFound {
 			c.JSON(http.StatusNotFound, gin.H{"error": "Alias not found"})

@@ -22,7 +22,7 @@ func RoleRequired(requiredRole int) gin.HandlerFunc {
 
 		// Is SID valid?
 		userID, err := utils.UserIDFromSID(session, config.RedisClient)
-		if err == redis.Nil || userID == "" {
+		if err == redis.Nil {
 			// Invalid session
 			c.JSON(401, gin.H{"error": "Unauthorized"})
 			c.Abort()
