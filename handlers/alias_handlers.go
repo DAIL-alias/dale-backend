@@ -4,7 +4,9 @@ import (
 	"DALE/config"
 	"DALE/models"
 	"DALE/services"
+	"DALE/utils"
 	"context"
+	"log"
 	"net/http"
 	"strconv"
 
@@ -22,13 +24,36 @@ func NewAliasHandler(aliasService *services.AliasService) *AliasHandler {
 }
 
 func (h *AliasHandler) CreateAlias(c *gin.Context) {
-	var alias models.Alias
-
-	if err := c.ShouldBindJSON(&alias); err != nil {
-
-		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+	// Get session ID
+	session, err := c.Cookie("sid")
+	if err != nil || session == "" {
+		// Invalid session, 401 and redirect
+		c.JSON(401, gin.H{"error": "Unauthorized"})
+		c.Abort()
 		return
 	}
+
+	// Is SID valid?
+	userID, err := utils.UserIDFromSID(session, config.RedisClient)
+	if err == redis.Nil || userID == "" {
+		// Invalid session
+		c.JSON(401, gin.H{"error": "Unauthorized"})
+		c.Abort()
+		return
+	} else if err != nil {
+		c.JSON(500, gin.H{"error": err.Error()})
+		c.Abort()
+		return
+	}
+
+	var alias models.Alias
+	// Create the alias model with UserID specified only
+	userIDint, err := strconv.Atoi(userID)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid user ID"})
+		return
+	}
+	alias.UserID = userIDint
 
 	if err := h.AliasService.CreateAlias(&alias); err != nil {
 
@@ -92,6 +117,7 @@ func (h *AliasHandler) GetUsersAliases(c *gin.Context) {
 // Non-admin, enforces user resource ownership
 // regular one gets all aliases, i moved those to an admin protected route
 func (h *AliasHandler) GetUsersAliasesProtected(c *gin.Context) {
+	log.Println("GetUsersAliasesProtected")
 	// Get sessionID => userID
 	sessionID, err := c.Cookie("sid")
 	if err != nil {
@@ -103,7 +129,7 @@ func (h *AliasHandler) GetUsersAliasesProtected(c *gin.Context) {
 	userID, err := config.RedisClient.Get(context.Background(), sessionID).Result()
 	if err == redis.Nil || userID == "" {
 		// Invalid session
-		c.Redirect(http.StatusFound, "/signin")
+		c.JSON(403, gin.H{"error": "Unauthorized"})
 		c.Abort()
 		return
 	} else if err != nil {
@@ -111,6 +137,8 @@ func (h *AliasHandler) GetUsersAliasesProtected(c *gin.Context) {
 		c.Abort()
 		return
 	}
+
+	log.Printf("userID: %s", userID)
 
 	// To integer
 	userIDint, err := strconv.Atoi(userID)
@@ -150,7 +178,7 @@ func (h *AliasHandler) ToggleActivateStatus(c *gin.Context) {
 	userIDStr, err := config.RedisClient.Get(context.Background(), sessionID).Result()
 	if err == redis.Nil || userIDStr == "" {
 		// Invalid session
-		c.Redirect(http.StatusFound, "/signin")
+		c.JSON(403, gin.H{"error": "Unauthorized"})
 		c.Abort()
 		return
 	} else if err != nil {
