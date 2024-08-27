@@ -1,8 +1,11 @@
 package repositories
 
 import (
-	"gorm.io/gorm"
 	"DALE/models"
+	"DALE/utils"
+	"errors"
+
+	"gorm.io/gorm"
 )
 
 // Struct defining methods for user DB operations
@@ -32,4 +35,24 @@ func (r *UserRepository) GetUserById(id int) (models.User, error) {
 	var user models.User
 	err := r.DB.First(&user, id).Error
 	return user, err
+}
+
+// Get here by email and password (hash checked)
+func (r *UserRepository) GetUserByEmailAndPassword(email, password string) (*models.User, error) {
+	var user models.User
+	
+	// Get by email first
+	if err := r.DB.Where("email = ?", email).First(&user).Error; err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return nil, errors.New("invalid email or password")
+		}
+		return nil, err
+	}
+
+	// Compare password (hash)
+	if !utils.CheckPasswordHash(password, user.Salt, user.Password) {
+		return nil, errors.New("invalid email or password")
+	}
+
+	return &user, nil
 }

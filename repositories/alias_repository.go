@@ -33,11 +33,10 @@ func (r *AliasRepository) GetAliasByID(id int) (models.Alias, error) {
 
 func (r *AliasRepository) GetUsersAliases(userid int) ([]models.Alias, error) {
 	var aliases []models.Alias
-	err := r.DB.Debug().Where(`"user_id" = ?`, userid).Find(&aliases).Error
+	err := r.DB.Debug().Where(`"user_id" = ? AND "is_deleted" = false`, userid).Find(&aliases).Error
 	return aliases, err
 }
 
-// define activation and deactivation of aliases
 func (r *AliasRepository) ToggleActiveStatus(id int) (models.Alias, error) {
 	var alias models.Alias
 
@@ -50,4 +49,10 @@ func (r *AliasRepository) ToggleActiveStatus(id int) (models.Alias, error) {
 
 	err = r.DB.Save(&alias).Error
 	return alias, err
+}
+
+// Delete alias
+func (r *AliasRepository) DeleteAlias(id int) error {
+	// Soft delete - set `IsDeleted` to true
+	return r.DB.Model(&models.Alias{}).Where("id = ?", id).Update("is_deleted", true).Error
 }

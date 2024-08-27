@@ -1,11 +1,13 @@
-package config 
+package config
 
 import (
-	"gorm.io/gorm"
-	"gorm.io/driver/postgres"
+	config "DALE/migrations"
 	"DALE/models"
 	"log"
+
 	"github.com/spf13/viper"
+	"gorm.io/driver/postgres"
+	"gorm.io/gorm"
 )
 
 var DB *gorm.DB
@@ -26,4 +28,7 @@ func InitializeDB() {
 	// Migrate schema if needed
 	DB.AutoMigrate(&models.User{})
 	DB.AutoMigrate(&models.Alias{})
+
+	// Create triggers
+	config.CreateTriggers(DB)
 }
